@@ -14,7 +14,7 @@ internal class Program
         
         SolvePart(args[0], 1);
         
-        //SolvePart(args[0], 2);
+        SolvePart(args[0], 2);
         
     }
 
@@ -28,41 +28,72 @@ internal class Program
         List<Rotation> instructions = GetInstructions(inputFile);
 
         //Part 1:
-        int dialPosition = 50;
+        Dial dial = new Dial();
         Console.WriteLine("The dial starts by pointing at 50.");
         int password = 0;
         foreach (var rotation in instructions)
         {
-            dialPosition = RotateDial(dialPosition, rotation);
-            if(dialPosition==0)
-            {
-                password++;
-            }
+            password = RotateDial(dial, rotation, password, partNumber);            
         }
 
         Console.WriteLine($"Part {partNumber} Solution: {password}");
+        Console.WriteLine();
     }
 
-    private static int RotateDial(int dialPosition, Rotation rotation)
+    private static int RotateDial(Dial dial, Rotation rotation, int password, int partNumber)
     {
+        bool startedAt0 = false;
+        if(dial.Position==0)
+        {
+            startedAt0 = true;
+        }
+
         if(rotation.Direction=='L')
         {
-            dialPosition -= rotation.Amount;            
+            dial.Position -= rotation.Amount;            
         }
         else
         {
-            dialPosition += rotation.Amount;            
+            dial.Position += rotation.Amount;            
         }
 
-        dialPosition %= 100;
-        if (dialPosition < 0)
+        int timesPointingAt0 = 0;
+        if (partNumber==2)
+        {            
+            if (dial.Position >= 100)
+            {
+                timesPointingAt0 = dial.Position / 100;
+            }
+            if (dial.Position <= 0)
+            {
+                timesPointingAt0 = ((dial.Position / 100) * -1) + 1;
+                if(startedAt0)
+                {
+                    timesPointingAt0--;
+                }
+            }
+            password += timesPointingAt0;
+        }        
+
+        dial.Position %= 100;
+        if (dial.Position < 0)
         {
-            dialPosition += 100;
+            dial.Position += 100;
         }
 
-        Console.WriteLine($"The dial is rotated {rotation.Direction}{rotation.Amount} to point at {dialPosition}.");
+        if(partNumber == 1 && dial.Position == 0)
+        {
+            password++;
+        }
 
-        return dialPosition;
+        //Console.Write($"The dial is rotated {rotation.Direction}{rotation.Amount} to point at {dial.Position}.");
+        //if(partNumber==2)
+        //{
+        //    Console.Write($"Times pointing at 0: {timesPointingAt0}");
+        //}
+        //Console.WriteLine();
+
+        return password;
     }
 
     private static List<Rotation> GetInstructions(string inputFile)
@@ -80,4 +111,9 @@ internal class Program
         }
         return instructions;
     }
+}
+
+internal class Dial
+{
+    public int Position { get; set; } = 50;
 }
