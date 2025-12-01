@@ -11,10 +11,7 @@ internal class Program
             Console.WriteLine("filename is required!");
             throw new Exception("No file provided!");
         }
-        /*The captcha requires you to review a sequence of digits (your puzzle input) and 
-         * find the sum of all digits that match the next digit in the list. 
-         * The list is circular, so the digit after the last digit is the first digit in the list.*/
-
+        
         SolvePart(args[0], 1);
         
         //SolvePart(args[0], 2);
@@ -29,6 +26,8 @@ internal class Program
         }
 
         List<Rotation> instructions = GetInstructions(inputFile);
+
+        //Part 1:
         int dialPosition = 50;
         Console.WriteLine("The dial starts by pointing at 50.");
         int password = 0;
@@ -48,17 +47,17 @@ internal class Program
     {
         if(rotation.Direction=='L')
         {
-            dialPosition -= rotation.Amount;
-            dialPosition %= 100;
-            if (dialPosition<0)
-            {
-                dialPosition += 100;
-            }
+            dialPosition -= rotation.Amount;            
         }
         else
         {
-            dialPosition += rotation.Amount;
-            dialPosition %= 100;
+            dialPosition += rotation.Amount;            
+        }
+
+        dialPosition %= 100;
+        if (dialPosition < 0)
+        {
+            dialPosition += 100;
         }
 
         Console.WriteLine($"The dial is rotated {rotation.Direction}{rotation.Amount} to point at {dialPosition}.");
@@ -81,10 +80,4 @@ internal class Program
         }
         return instructions;
     }
-}
-
-internal class Rotation
-{
-    public char Direction { get; set; }
-    public int Amount { get; set; }
 }
