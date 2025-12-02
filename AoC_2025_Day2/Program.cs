@@ -24,7 +24,52 @@ internal class Program
             throw new Exception("Invalid part number!");
         }
 
-        //
-        
-    }    
+        var validRanges = GetValidRanges(inputFile);
+
+        long totalInvalidValues = 0;
+
+        foreach (var validRange in validRanges)
+        {
+            Console.WriteLine($"Start: {validRange.Start}, End: {validRange.End}");
+            var invalidValues = GetInvalidValuesInRange(validRange);
+            Console.WriteLine(string.Join(',', invalidValues));
+            foreach (var invalidValue in invalidValues)
+            {
+                totalInvalidValues += invalidValue;
+            }
+        }
+
+        Console.WriteLine($"Total of all invalid values: {totalInvalidValues}");
+    }
+
+    private static List<long> GetInvalidValuesInRange(ValidRange validRange)
+    {
+        List<long> output = new List<long>();
+        for(long i = validRange.Start; i<=validRange.End; i++)
+        {
+            string numberAsText = i.ToString();
+            if(numberAsText.Length % 2 == 0)
+            {
+                string firstPart = numberAsText.Substring(0, numberAsText.Length / 2);
+                string secondPart = numberAsText.Substring(numberAsText.Length / 2);
+                if(firstPart==secondPart)
+                {
+                    output.Add(i);
+                }
+            }
+        }
+        return output;
+    }
+
+    private static List<ValidRange> GetValidRanges(string inputFile)
+    {
+        var input = InputParser.ReadInputAsCsvBlock(inputFile);
+        var output = new List<ValidRange>();
+        foreach (var item in input)
+        {
+            var parts = item.Split("-");
+            output.Add(new ValidRange { Start = long.Parse(parts[0]), End = long.Parse(parts[1]) });
+        }
+        return output;
+    }
 }

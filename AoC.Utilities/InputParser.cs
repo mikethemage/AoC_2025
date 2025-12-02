@@ -41,4 +41,10 @@ public static class InputParser
     {
         return File.ReadAllLines($"{inputFile}.txt").ToList();
     }
+
+    public static List<string> ReadInputAsCsvBlock(string inputFile)
+    {
+        string inputData = ReadInputAsText(inputFile);
+        return inputData.Trim().Split(",").ToList();
+    }
 }
