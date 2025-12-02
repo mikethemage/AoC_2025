@@ -14,11 +14,12 @@ internal class Program
         
         SolvePart(args[0], 1);
         
-        //SolvePart(args[0], 2);        
+        SolvePart(args[0], 2);        
     }
 
     private static void SolvePart(string inputFile, int partNumber)
     {
+        Console.WriteLine($"Part {partNumber}:");
         if (partNumber != 1 && partNumber != 2)
         {
             throw new Exception("Invalid part number!");
@@ -31,7 +32,16 @@ internal class Program
         foreach (var validRange in validRanges)
         {
             Console.WriteLine($"Start: {validRange.Start}, End: {validRange.End}");
-            var invalidValues = GetInvalidValuesInRange(validRange);
+            List<long> invalidValues;
+            if(partNumber==1)
+            {
+                invalidValues = GetInvalidValuesInRangeForPart1(validRange);
+            }
+            else
+            {
+                invalidValues = GetInvalidValuesInRangeForPart2(validRange);
+            }
+
             Console.WriteLine(string.Join(',', invalidValues));
             foreach (var invalidValue in invalidValues)
             {
@@ -40,9 +50,36 @@ internal class Program
         }
 
         Console.WriteLine($"Total of all invalid values: {totalInvalidValues}");
+        Console.WriteLine();
     }
 
-    private static List<long> GetInvalidValuesInRange(ValidRange validRange)
+    private static List<long> GetInvalidValuesInRangeForPart2(ValidRange validRange)
+    {
+        List<long> output = new List<long>();
+        for (long i = validRange.Start; i <= validRange.End; i++)
+        {
+            string numberAsText = i.ToString();
+
+            for(int j=1; j<=numberAsText.Length/2;j++)
+            {
+                int numberOfRepeats = numberAsText.Length / j;
+                if(j*numberOfRepeats==numberAsText.Length)
+                {
+                    string repeatingPart = numberAsText.Substring(0, j);
+                    string toCheck = string.Concat(Enumerable.Repeat(repeatingPart, numberOfRepeats));
+                    if(toCheck==numberAsText)
+                    {
+                        output.Add(i);
+                        break;
+                    }
+                }               
+            }
+
+        }
+        return output;
+    }
+
+    private static List<long> GetInvalidValuesInRangeForPart1(ValidRange validRange)
     {
         List<long> output = new List<long>();
         for(long i = validRange.Start; i<=validRange.End; i++)
