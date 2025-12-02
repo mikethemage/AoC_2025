@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="AoC.Utilities/AoC.Utilities.csproj" />
   <Project Path="AoC_2025_Day1/AoC_2025_Day1.csproj" />  
+  <Project Path="AoC_2025_Day2/AoC_2025_Day2.csproj" />  
 </Solution>
