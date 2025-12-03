@@ -12,9 +12,9 @@ internal class Program
             throw new Exception("No file provided!");
         }
         
-        SolvePart(args[0], 1);
+        //SolvePart(args[0], 1);
         
-        //SolvePart(args[0], 2);        
+        SolvePart(args[0], 2);        
     }
 
     private static void SolvePart(string inputFile, int partNumber)
@@ -27,15 +27,31 @@ internal class Program
 
         List<BatteryBank> batteryBanks = LoadBatteries(inputFile);
 
-        int totalJoltage = 0;
+        long totalJoltage = 0;
         foreach (BatteryBank batteryBank in batteryBanks)
         {
-            Battery firstHighest = batteryBank.GetFirstHighest();
-            Battery secondHighest = batteryBank.GetSecondHighest(firstHighest.Id);
+            if(partNumber==1)
+            {
+                Battery firstHighest = batteryBank.GetFirstHighest(1);
+                Battery secondHighest = batteryBank.GetSecondHighest(firstHighest.Id, 0);
 
-            int joltage = (firstHighest.Joltage * 10) + secondHighest.Joltage;
-            totalJoltage += joltage;
-            Console.WriteLine($"{joltage}");
+                int joltage = (firstHighest.Joltage * 10) + secondHighest.Joltage;
+                totalJoltage += joltage;
+                Console.WriteLine($"{joltage}");
+            }
+            else
+            {
+                Battery previous = batteryBank.GetFirstHighest(11);
+                long joltage = previous.Joltage * (long)Math.Pow(10, 11);
+                for (int i = 10; i >= 0; i--)
+                {
+                    previous = batteryBank.GetSecondHighest(previous.Id, i);
+                    joltage += previous.Joltage * (long)Math.Pow(10, i);
+                }
+                totalJoltage += joltage;
+                Console.WriteLine($"{joltage}");
+            }
+            
         }
         Console.WriteLine($"Total: {totalJoltage}");
     }

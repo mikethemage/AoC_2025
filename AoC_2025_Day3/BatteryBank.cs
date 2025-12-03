@@ -12,15 +12,15 @@ internal class BatteryBank
         }
     }
 
-    public Battery GetFirstHighest()
+    public Battery GetFirstHighest(int remaining)
     {
-        int maxJoltage = Batteries.OrderBy(b=>b.Id).Take(Batteries.Count - 1).Max(x => x.Joltage);
+        int maxJoltage = Batteries.OrderBy(b=>b.Id).Take(Batteries.Count - remaining).Max(x => x.Joltage);
         return Batteries.Where(b => b.Joltage == maxJoltage).MinBy(b=>b.Id)!;
     }
 
-    public Battery GetSecondHighest(int firstHighestId)
+    public Battery GetSecondHighest(int previousHighestId, int remaining)
     {
-        int maxJoltage = Batteries.Where(b => b.Id > firstHighestId).OrderBy(b => b.Id).Max(x => x.Joltage);
-        return Batteries.Where(b => b.Id > firstHighestId).Where(b => b.Joltage == maxJoltage).MinBy(b => b.Id)!;
+        int maxJoltage = Batteries.OrderBy(b => b.Id).Take(Batteries.Count - remaining).Where(b => b.Id > previousHighestId).Max(x => x.Joltage);
+        return Batteries.Where(b => b.Id > previousHighestId).Where(b => b.Joltage == maxJoltage).MinBy(b => b.Id)!;
     }
 }
