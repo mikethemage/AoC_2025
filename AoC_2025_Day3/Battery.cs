@@ -2,5 +2,6 @@
 
 internal class Battery
 {
+    public required int Id { get; set; }
     public required int Joltage { get; set; }
 }

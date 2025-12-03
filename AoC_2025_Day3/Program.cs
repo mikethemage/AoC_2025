@@ -27,15 +27,17 @@ internal class Program
 
         List<BatteryBank> batteryBanks = LoadBatteries(inputFile);
 
-        foreach (var batteryBank in batteryBanks)
+        int totalJoltage = 0;
+        foreach (BatteryBank batteryBank in batteryBanks)
         {
-            foreach (var battery in batteryBank.Batteries)
-            {
-                Console.Write($"{battery.Joltage}");   
-            }
-            Console.WriteLine();
-        }
+            Battery firstHighest = batteryBank.GetFirstHighest();
+            Battery secondHighest = batteryBank.GetSecondHighest(firstHighest.Id);
 
+            int joltage = (firstHighest.Joltage * 10) + secondHighest.Joltage;
+            totalJoltage += joltage;
+            Console.WriteLine($"{joltage}");
+        }
+        Console.WriteLine($"Total: {totalJoltage}");
     }
 
     private static List<BatteryBank> LoadBatteries(string inputFile)
