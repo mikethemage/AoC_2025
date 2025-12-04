@@ -1,4 +1,5 @@
-﻿namespace AoC_2025_Day4;
+﻿
+namespace AoC_2025_Day4;
 
 internal class Grid
 {
@@ -78,5 +79,14 @@ internal class Grid
     public int GetAccessibleRollCount()
     {
         return _map.Values.Where(x => x.IsAccessible).Count();
+    }
+
+    internal void RemoveAccessibleRolls()
+    {
+        List<Roll> toRemove = _map.Values.Where(x => x.IsAccessible).ToList();
+        foreach (var item in toRemove)
+        {
+            _map.Remove((item.Row, item.Column));
+        }
     }
 }

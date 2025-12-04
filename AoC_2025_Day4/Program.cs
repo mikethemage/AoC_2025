@@ -14,7 +14,7 @@ internal class Program
         
         SolvePart(args[0], 1);
         
-        //SolvePart(args[0], 2);        
+        SolvePart(args[0], 2);        
     }
 
     private static void SolvePart(string inputFile, int partNumber)
@@ -27,17 +27,44 @@ internal class Program
 
         Grid grid = LoadRolls(inputFile);
 
-        Console.WriteLine("Before:");
-        OutputGrid(grid);
-        Console.WriteLine();
+        if(partNumber==1)
+        {
+            //Console.WriteLine("Before:");
+            //OutputGrid(grid);
+            //Console.WriteLine();
 
-        grid.UpdateRollAccessibility();
+            grid.UpdateRollAccessibility();
 
-        Console.WriteLine("After:");
-        OutputGrid(grid);
-        Console.WriteLine();
+            //Console.WriteLine("After:");
+            //OutputGrid(grid);
+            //Console.WriteLine();
 
-        Console.WriteLine($"Accessible Rolls: {grid.GetAccessibleRollCount()}");
+            Console.WriteLine($"Accessible Rolls: {grid.GetAccessibleRollCount()}");
+            Console.WriteLine();
+        }
+        else
+        {
+            int totalRemoved = GetTotalCanBeRemoved(grid);
+
+            Console.WriteLine($"Total Removed: {totalRemoved}");
+        }
+    }
+
+    private static int GetTotalCanBeRemoved(Grid grid)
+    {
+        int totalRemoved = 0;
+        int toRemove;
+        do
+        {
+            grid.UpdateRollAccessibility();
+            toRemove = grid.GetAccessibleRollCount();
+            if (toRemove > 0)
+            {
+                grid.RemoveAccessibleRolls();
+                totalRemoved += toRemove;
+            }
+        } while (toRemove > 0);
+        return totalRemoved;
     }
 
     private static Grid LoadRolls(string inputFile)
