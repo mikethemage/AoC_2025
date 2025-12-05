@@ -14,7 +14,7 @@ internal class Program
 
         SolvePart(args[0], 1);
 
-        //SolvePart(args[0], 2);
+        SolvePart(args[0], 2);
     }
 
     private static void SolvePart(string inputFile, int partNumber)
@@ -26,11 +26,23 @@ internal class Program
         }
 
         Kitchen kitchen = LoadRangesAndIngredients(inputFile);
-
-        List<long> freshIngredients = GetFreshIngredients(kitchen);
-
-        Console.WriteLine($"Number of fresh ingredients: {freshIngredients.Count}");
         
+        if(partNumber==1)
+        {
+            List<long> freshIngredients = GetFreshIngredients(kitchen);
+            Console.WriteLine($"Number of fresh ingredients: {freshIngredients.Count}");
+            Console.WriteLine();
+        }
+        else
+        {
+            List<Range> combinedRanges = CombineRanges(kitchen.Ranges);
+            foreach (var range in combinedRanges)
+            {
+                Console.WriteLine($"{range.Min}-{range.Max}");
+            }
+            Console.WriteLine($"{combinedRanges.Sum(x => (x.Max-x.Min) + 1)}");
+            Console.WriteLine();
+        }
     }
 
     private static Kitchen LoadRangesAndIngredients(string inputFile)
@@ -67,6 +79,33 @@ internal class Program
             {
                 output.Add(ingredient);
             }
+        }
+        return output;
+    }
+
+    private static List<Range> CombineRanges(List<Range> input)
+    {
+        List<Range> output = new List<Range>();
+        List<Range> ranges = input.OrderBy(x => x.Min).ThenBy(x => x.Max).ToList();
+        while(ranges.Count>0)
+        {
+            Range currentRange = ranges.First();
+            ranges.Remove(currentRange);
+            List<Range> newRanges = new List<Range>();
+            foreach (Range range in ranges)
+            {
+                if(range.Min <= currentRange.Max && range.Max >= currentRange.Min)
+                {
+                    Range newRange = new Range { Min = Math.Min(range.Min, currentRange.Min), Max = Math.Max(range.Max, currentRange.Max) };                    
+                    currentRange = newRange;
+                }
+                else
+                {
+                    newRanges.Add(range);
+                }
+            }
+            ranges = newRanges;
+            output.Add(currentRange);
         }
         return output;
     }
