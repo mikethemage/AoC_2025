@@ -25,6 +25,36 @@ internal class Program
             throw new Exception("Invalid part number!");
         }
 
-       
+        ProblemContainer problemContainer = GetProblems(inputFile);
+
+        Console.WriteLine($"{problemContainer.GetGrandTotal()}");
+    }
+
+    private static ProblemContainer GetProblems(string inputFile)
+    {
+        var lines = InputParser.ReadInputAsRows(inputFile);
+        while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines.Last()))
+        {
+            lines.Remove(lines.Last());
+        }
+
+        var problemContainer = new ProblemContainer();
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var parts = lines[i].Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            for (int j = 0; j < parts.Length; j++)
+            {
+                if (i < lines.Count - 1)
+                {
+                    problemContainer.AddValue(j, long.Parse(parts[j]));
+                }
+                else
+                {
+                    problemContainer.AddOperation(j, parts[j]);
+                }
+            }
+        }
+
+        return problemContainer;
     }
 }
