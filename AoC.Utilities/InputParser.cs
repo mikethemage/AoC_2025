@@ -1,6 +1,4 @@
-﻿
-
-namespace AoC.Utilities;
+﻿namespace AoC.Utilities;
 
 public static class InputParser
 {
