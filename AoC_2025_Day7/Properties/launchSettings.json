@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AoC_2025_Day7": {
+      "commandName": "Project",
+      "commandLineArgs": "sample"
+    }
+  }
+}
