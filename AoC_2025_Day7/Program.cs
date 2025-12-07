@@ -25,6 +25,33 @@ internal class Program
             throw new Exception("Invalid part number!");
         }
 
-        
+        Manifold manifold = LoadManifold(inputFile);
+
+        int result = manifold.Run();
+
+        Console.WriteLine($"Result: {result}");
+
+    }
+
+    private static Manifold LoadManifold(string inputFile)
+    {
+        List<string> input = InputParser.ReadInputAsRows(inputFile);
+        Manifold manifold = new Manifold { Height = input.Count };
+        for (int j = 0; j < input.Count; j++)
+        {
+            for (int i = 0; i < input[j].Length; i++)
+            {
+                if (input[j][i] == 'S')
+                {
+                    manifold.Init(new Beam { Column = i, Row = j });
+                }
+                else if (input[j][i] == '^')
+                {
+                    manifold.AddSplitter(new Splitter { Column = i, Row = j });
+                }
+            }
+        }
+
+        return manifold;
     }
 }
