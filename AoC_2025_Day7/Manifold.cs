@@ -17,7 +17,7 @@ internal class Manifold
         _splitters.Add(splitter);
     }
 
-    public int Run()
+    private void Run()
     {
         int startRow = _beams.Min(x => x.Row);
         
@@ -30,26 +30,43 @@ internal class Manifold
                 
                 if (splitter is not null)
                 {
-                    foreach (Beam newBeam in splitter.Split())
+                    foreach (Beam newBeam in splitter.Split(beam))
                     {
-                       if(!newBeams.Any(x=>x.Row==newBeam.Row && x.Column==newBeam.Column))
-                       {
-                          newBeams.Add(newBeam);
-                       }
-                    }                    
+                        AddNewBeam(newBeams, newBeam);
+                    }
                 }
                 else
                 {
                     Beam newBeam = beam.MoveDown();
-                    if (!newBeams.Any(x => x.Row == newBeam.Row && x.Column == newBeam.Column))
-                    {
-                        newBeams.Add(newBeam);
-                    }
+                    AddNewBeam(newBeams, newBeam);
                 }
             }
             _beams = newBeams;
         }
+    }
 
-        return _splitters.Count(x=>x.Triggered);
+    private static void AddNewBeam(List<Beam> newBeams, Beam newBeam)
+    {
+        Beam? existingBeam = newBeams.FirstOrDefault(x => x.Row == newBeam.Row && x.Column == newBeam.Column);
+        if (existingBeam is null)
+        {
+            newBeams.Add(newBeam);
+        }
+        else
+        {
+            existingBeam.BeamCount += newBeam.BeamCount;
+        }
+    }
+
+    public int RunPart1()
+    {
+        Run();
+        return _splitters.Count(x => x.Triggered);
+    }
+
+    public long RunPart2()
+    {
+        Run();
+        return _beams.Sum(x => x.BeamCount);
     }
 }

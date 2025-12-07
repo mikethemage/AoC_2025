@@ -14,7 +14,7 @@ internal class Program
 
         SolvePart(args[0], 1);
 
-        //SolvePart(args[0], 2);
+        SolvePart(args[0], 2);
     }
 
     private static void SolvePart(string inputFile, int partNumber)
@@ -27,9 +27,16 @@ internal class Program
 
         Manifold manifold = LoadManifold(inputFile);
 
-        int result = manifold.Run();
-
-        Console.WriteLine($"Result: {result}");
+        if (partNumber == 1)
+        {
+            int result = manifold.RunPart1();
+            Console.WriteLine($"Normal result: {result}");
+        }
+        else
+        {
+            long result = manifold.RunPart2();
+            Console.WriteLine($"Quantum result: {result}");
+        }
 
     }
 

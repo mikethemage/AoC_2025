@@ -6,9 +6,9 @@ internal class Splitter
     public required int Column { get; init; }
     public bool Triggered { get; private set; } = false;
 
-    public List<Beam> Split()
+    public List<Beam> Split(Beam triggeringBeam)
     {
         Triggered = true;
-        return new List<Beam> { new Beam { Column = Column - 1, Row = Row + 1 }, new Beam { Column = Column + 1, Row = Row + 1 } };
+        return new List<Beam> { new Beam { Column = Column - 1, Row = Row + 1, BeamCount=triggeringBeam.BeamCount }, new Beam { Column = Column + 1, Row = Row + 1, BeamCount=triggeringBeam.BeamCount } };
     }
 }
