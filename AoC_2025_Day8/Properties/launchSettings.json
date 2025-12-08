@@ -2,7 +2,8 @@
   "profiles": {
     "AoC_2025_Day8": {
       "commandName": "Project",
-      "commandLineArgs": "sample"
+      //"commandLineArgs": "sample 10"
+      "commandLineArgs": "input 1000"
     }
   }
 }
