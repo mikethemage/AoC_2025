@@ -15,13 +15,13 @@ public static class InputParser
 
     public static List<int> ReadInputAsIntList(string inputFile)
     {
-        string inputData = ReadInputAsText(inputFile);        
+        string inputData = ReadInputAsText(inputFile);
         return inputData.Select(x => x.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).Select(int.Parse).ToList();
     }
 
     public static List<List<int>> ReadInputAsTabSeparatedIntRows(string inputFile)
     {
-        List<string> inputData= ReadInputAsRows(inputFile);
+        List<string> inputData = ReadInputAsRows(inputFile);
         List<List<int>> output = new List<List<int>>();
         foreach (var row in inputData)
         {
@@ -44,5 +44,19 @@ public static class InputParser
     {
         string inputData = ReadInputAsText(inputFile);
         return inputData.Trim().Split(",").ToList();
+    }
+
+    public static List<List<int>> ReadInputAsCsvIntRows(string inputFile)
+    {
+        List<List<int>> output = new List<List<int>>();
+        List<string> inputData = ReadInputAsRows(inputFile);
+        foreach (string row in inputData)
+        {
+            output.Add(row.Split(",", StringSplitOptions.TrimEntries)
+                        .Select(x => int.Parse(x))
+                        .ToList());
+        }
+
+        return output;
     }
 }
