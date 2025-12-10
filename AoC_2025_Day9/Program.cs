@@ -57,7 +57,7 @@ internal class Program
             rectangles = rectangles.OrderByDescending(x => x.Area).ToList();
 
             //Todo - calculate bounding borders and use in validation.
-            List<Line> borderLine = GetBorderLines(tiles);
+            List<Line> borderLines = GetBorderLines(tiles);
            
 
             //VisualizeTilesWithFilled(tiles, completedFilled);
@@ -65,7 +65,7 @@ internal class Program
 
             foreach (Rectangle rectangle in rectangles)
             {
-                if (IsValidRectangle(rectangle, entireBorder))
+                if (IsValidRectangle(rectangle, borderLines))
                 {
                     //VisualizeTiles(tiles, rectangle);
                     //Console.WriteLine();
@@ -78,39 +78,116 @@ internal class Program
 
     private static List<Line> GetBorderLines(List<Tile> tiles)
     {
-        throw new NotImplementedException();
+        List<Line> borderLines = new List<Line>();
+        Tile previousTile = tiles[0];
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            Tile currentTile;
+            if (i == tiles.Count - 1)
+            {
+                currentTile = tiles[0];
+            }
+            else
+            {
+                currentTile = tiles[i + 1];
+            }
+
+            if (currentTile.Row == previousTile.Row)
+            {
+                borderLines.Add(new Line { StartRow = currentTile.Row, EndRow = currentTile.Row, StartColumn = Math.Min(currentTile.Column, previousTile.Column), EndColumn = Math.Max(currentTile.Column, previousTile.Column) });
+            }
+            if (currentTile.Column == previousTile.Column)
+            {
+                borderLines.Add(new Line { StartColumn = currentTile.Column, EndColumn = currentTile.Column, StartRow = Math.Min(currentTile.Row, previousTile.Row), EndRow = Math.Max(currentTile.Row, previousTile.Row) });
+            }
+            previousTile = currentTile;
+        }
+        return borderLines;
     }
 
-    private static bool IsValidRectangle(Rectangle rectangle, List<Tile> entireBorder)
+    private static bool IsValidRectangle(Rectangle rectangle, List<Line> borderLines)
     {
-        if(    !ValidBoundingCorner(rectangle.Tile1.Row,rectangle.Tile1.Column, entireBorder)
-            || !ValidBoundingCorner(rectangle.Tile1.Row, rectangle.Tile2.Column, entireBorder)
-            || !ValidBoundingCorner(rectangle.Tile2.Row, rectangle.Tile2.Column, entireBorder)
-            || !ValidBoundingCorner(rectangle.Tile2.Row, rectangle.Tile1.Column, entireBorder)
+        if (!ValidBounding((rectangle.Tile1.Row +rectangle.Tile2.Row)/2 ,(rectangle.Tile1.Column+rectangle.Tile2.Column)/2, borderLines)
+            //|| 
+            //!ValidBounding(rectangle.Tile1.Row, rectangle.Tile1.Column, borderLines)
+            //|| !ValidBounding(rectangle.Tile1.Row, rectangle.Tile2.Column, borderLines)
+            //|| !ValidBounding(rectangle.Tile2.Row, rectangle.Tile1.Column, borderLines)
+            //|| !ValidBounding(rectangle.Tile2.Row, rectangle.Tile2.Column, borderLines)
             )
         {
             return false;
         }
 
         //Check each side of the rectangle for crossing borders
+        List<Line> perimeter = rectangle.GetPerimeter();
+        var item = perimeter.Where(x => x.StartColumn == x.EndColumn).MinBy(x => x.StartColumn);        
+        if(CheckHorizontalPerimeterLeft(item!, borderLines.Where(x => x.StartRow == x.EndRow)))
+        {
+            return false;
+        }
+        item = perimeter.Where(x => x.StartColumn == x.EndColumn).MaxBy(x => x.StartColumn);
+        if (CheckHorizontalPerimeterRight(item!, borderLines.Where(x => x.StartRow == x.EndRow)))
+        {
+            return false;
+        }
 
+        item = perimeter.Where(x => x.StartRow == x.EndRow).MinBy(x => x.StartRow);        
+        if(CheckVerticalPerimeterTop(item!, borderLines.Where(x => x.StartColumn == x.EndColumn)))
+        {
+            return false;
+        }
+
+        item = perimeter.Where(x => x.StartRow == x.EndRow).MaxBy(x => x.StartRow);
+        if (CheckVerticalPerimeterBottom(item!, borderLines.Where(x => x.StartColumn == x.EndColumn)))
+        {
+            return false;
+        }
+
+
+        return true;
     }
 
-    private static bool ValidBoundingCorner(int row, int column, List<Tile> entireBorder)
+    private static bool CheckVerticalPerimeterTop(Line horizontalLine, IEnumerable<Line> verticalLines)
     {
-        if(entireBorder.Where(x=>x.Row == row && x.Column < column).Count() % 2 == 0
-            && entireBorder.Where(x => x.Row == row && x.Column <= column).Count() % 2 == 0
-            )
-        {
-            return false;
-        }
+        return verticalLines.Any(x => x.StartRow <= horizontalLine.StartRow && x.EndRow > horizontalLine.StartRow
+            && x.StartColumn < horizontalLine.EndColumn
+            && x.StartColumn > horizontalLine.StartColumn);
+    }
 
-        if (entireBorder.Where(x => x.Column == column && x.Row < row).Count() % 2 == 0
-            && entireBorder.Where(x => x.Column == column && x.Row <= row).Count() % 2 == 0
+    private static bool CheckVerticalPerimeterBottom(Line horizontalLine, IEnumerable<Line> verticalLines)
+    {
+        return verticalLines.Any(x => x.StartRow < horizontalLine.StartRow && x.EndRow >= horizontalLine.StartRow
+            && x.StartColumn < horizontalLine.EndColumn
+            && x.StartColumn > horizontalLine.StartColumn);
+    }
+
+    private static bool CheckHorizontalPerimeterLeft(Line verticalLine, IEnumerable<Line> horizontalLines)
+    {
+        return horizontalLines.Any(x => x.StartColumn <= verticalLine.StartColumn && x.EndColumn > verticalLine.StartColumn 
+            && x.StartRow < verticalLine.EndRow
+            && x.StartRow > verticalLine.StartRow);
+    }
+
+    private static bool CheckHorizontalPerimeterRight(Line verticalLine, IEnumerable<Line> horizontalLines)
+    {
+        return horizontalLines.Any(x => x.StartColumn < verticalLine.StartColumn && x.EndColumn >= verticalLine.StartColumn
+            && x.StartRow < verticalLine.EndRow
+            && x.StartRow > verticalLine.StartRow);
+    }
+
+    private static bool ValidBounding(int row, int column, List<Line> borderLines)
+    {
+        if(
+            (borderLines.Where(x=>x.StartRow <= row && x.EndRow >= row && x.StartColumn==x.EndColumn && x.StartColumn < column).Count() % 2 == 0
+            //&& borderLines.Where(x => x.StartRow <= row && x.EndRow >= row && x.StartColumn == x.EndColumn && x.StartColumn <= column).Count() % 2 == 0
+            )
+            || (borderLines.Where(x => x.StartColumn <= column && x.EndColumn >= column && x.StartRow == x.EndRow && x.StartRow < row).Count() % 2 == 0
+            //&& borderLines.Where(x => x.StartColumn <= column && x.EndColumn >= column && x.StartRow == x.EndRow && x.StartRow <= row).Count() % 2 == 0
+            )
             )
         {
             return false;
-        }
+        }        
 
         return true;
     }
@@ -197,5 +274,9 @@ internal class Program
 
 internal class Line
 {
+    public required int StartRow { get; init; }
+    public required int EndRow { get; init; }
+    public required int StartColumn { get; init; }
+    public required int EndColumn { get; init; }
 
 }
