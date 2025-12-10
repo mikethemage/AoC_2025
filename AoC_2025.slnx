@@ -9,4 +9,5 @@
   <Project Path="AoC_2025_Day7/AoC_2025_Day7.csproj" />  
   <Project Path="AoC_2025_Day8/AoC_2025_Day8.csproj" />  
   <Project Path="AoC_2025_Day9/AoC_2025_Day9.csproj" />  
+  <Project Path="AoC_2025_Day10/AoC_2025_Day10.csproj" />  
 </Solution>
