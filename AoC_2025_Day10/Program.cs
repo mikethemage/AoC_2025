@@ -14,7 +14,7 @@ internal class Program
 
         SolvePart(args[0], 1);
 
-        //SolvePart(args[0], 2);
+        SolvePart(args[0], 2);
     }
 
     private static void SolvePart(string inputFile, int partNumber)
@@ -31,15 +31,22 @@ internal class Program
         int totalButtonPresses = 0;
         foreach (Machine machine in machines)
         {
-            int buttonPressesRequired = GetMinimumButtonPresses(machine, partNumber!=1);
+            int buttonPressesRequired;
+            if (partNumber == 1)
+            { buttonPressesRequired = GetMinimumButtonPressesForLights(machine); }
+            else
+            {
+                buttonPressesRequired = GetMinimumButtonPressesForJoltages(machine);
+            }
             Console.WriteLine($"Machine {machineId}: Minimum button presses: {buttonPressesRequired}");
             totalButtonPresses += buttonPressesRequired;
             machineId++;
         }
         Console.WriteLine($"Total button presses: {totalButtonPresses}");
+        Console.WriteLine();
     }
 
-    private static int GetMinimumButtonPresses(Machine machine, bool useJoltages)
+    private static int GetMinimumButtonPressesForLights(Machine machine)
     {
         List<bool> initialLightStatus = new List<bool>();
         foreach (bool light in machine.TargetLightStatus)
@@ -53,7 +60,7 @@ internal class Program
         while (lightStates.Count > 0)
         {
             LightState currentState = lightStates.Dequeue();
-            if (TargetStatusReached(currentState.CurrentLightStatus, machine.TargetLightStatus))
+            if (TargetLightsStatusReached(currentState.CurrentLightStatus, machine.TargetLightStatus))
             {
                 return currentState.ButttonsPressed.Count;
             }
@@ -61,20 +68,48 @@ internal class Program
             {
                 if (currentState.ButttonsPressed.Count < 1 || currentState.ButttonsPressed.Last() != i)
                 {
-                    int priority = 1;
-                    if (useJoltages)
-                    {
-                        priority = machine.JoltageRequirements[i];
-                    }
-
-                    lightStates.Enqueue(machine.PressButton(currentState, i));
+                    lightStates.Enqueue(machine.PressButtonLightsMode(currentState, i));
                 }
             }
         }
         return -1;
     }
 
-    private static bool TargetStatusReached(List<bool> currentLightStatus, List<bool> targetLightStatus)
+    private static int GetMinimumButtonPressesForJoltages(Machine machine)
+    {
+        List<int> initialJoltageStatus = new List<int>();
+        foreach (int joltage in machine.JoltageRequirements)
+        {
+            initialJoltageStatus.Add(0);
+        }
+        JoltageState initialJoltageState = new JoltageState(initialJoltageStatus);
+        Queue<JoltageState> joltageStates = new Queue<JoltageState>();
+        joltageStates.Enqueue(initialJoltageState);
+
+        while (joltageStates.Count > 0)
+        {
+            JoltageState currentState = joltageStates.Dequeue();
+            int goalReached = TargetJoltagesStatusReached(currentState.CurrentJoltageStatus, machine.JoltageRequirements);
+            if (goalReached == 0)
+            {
+                return currentState.ButttonsPressed.Count;
+            }
+            if (goalReached == 1)
+            {
+                continue;
+            }
+            for (int i = 0; i < machine.Buttons.Count; i++)
+            {
+                if (currentState.ButttonsPressed.Count < 1 || currentState.ButttonsPressed.Last() != i)
+                {
+                    joltageStates.Enqueue(machine.PressButtonJoltageMode(currentState, i));
+                }
+            }
+        }
+        return -1;
+    }
+
+    private static bool TargetLightsStatusReached(List<bool> currentLightStatus, List<bool> targetLightStatus)
     {
         for (int i = 0; i < targetLightStatus.Count; i++)
         {
@@ -84,6 +119,25 @@ internal class Program
             }
         }
         return true;
+    }
+
+    private static int TargetJoltagesStatusReached(List<int> currentJoltagesStatus, List<int> targetJoltagesStatus)
+    {
+        for (int i = 0; i < targetJoltagesStatus.Count; i++)
+        {
+            if (currentJoltagesStatus[i] > targetJoltagesStatus[i])
+            {
+                return 1;
+            }
+        }
+        for (int i = 0; i < targetJoltagesStatus.Count; i++)
+        {
+            if (currentJoltagesStatus[i] < targetJoltagesStatus[i])
+            {
+                return -1;
+            }
+        }
+        return 0;
     }
 
     private static List<Machine> LoadMachines(string inputFile)
@@ -130,9 +184,13 @@ internal class Machine
     public required List<bool> TargetLightStatus { get; init; }
     public required List<List<int>> Buttons { get; init; }
     public required List<int> JoltageRequirements { get; init; }
-    public LightState PressButton(LightState currentLightState, int button)
+    public LightState PressButtonLightsMode(LightState currentLightState, int button)
     {
-        return currentLightState.Pressbutton(button, Buttons[button]);
+        return currentLightState.PressButton(button, Buttons[button]);
+    }
+    public JoltageState PressButtonJoltageMode(JoltageState currentJoltageState, int button)
+    {
+        return currentJoltageState.PressButton(button, Buttons[button]);
     }
 }
 
@@ -144,7 +202,7 @@ internal class LightState
     {
         CurrentLightStatus = new List<bool>(initialLightStatus);
     }
-    public LightState Pressbutton(int buttonId, List<int> toggleLights)
+    public LightState PressButton(int buttonId, List<int> toggleLights)
     {
         List<bool> nextLightStatus = new List<bool>(CurrentLightStatus);
         foreach (int toggleLight in toggleLights)
@@ -155,5 +213,27 @@ internal class LightState
         nextLightState.ButttonsPressed.AddRange(ButttonsPressed);
         nextLightState.ButttonsPressed.Add(buttonId);
         return nextLightState;
+    }
+}
+
+internal class JoltageState
+{
+    public List<int> ButttonsPressed { get; private set; } = new List<int>();
+    public List<int> CurrentJoltageStatus { get; private set; }
+    public JoltageState(List<int> initialJoltageStatus)
+    {
+        CurrentJoltageStatus = new List<int>(initialJoltageStatus);
+    }
+    public JoltageState PressButton(int buttonId, List<int> increaseJoltages)
+    {
+        List<int> nextJoltageStatus = new List<int>(CurrentJoltageStatus);
+        foreach (int increaseJoltage in increaseJoltages)
+        {
+            nextJoltageStatus[increaseJoltage] = CurrentJoltageStatus[increaseJoltage] + 1;
+        }
+        JoltageState nextJoltageState = new JoltageState(nextJoltageStatus);
+        nextJoltageState.ButttonsPressed.AddRange(ButttonsPressed);
+        nextJoltageState.ButttonsPressed.Add(buttonId);
+        return nextJoltageState;
     }
 }
