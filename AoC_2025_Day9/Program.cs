@@ -1,5 +1,4 @@
 ﻿using AoC.Utilities;
-using System.Drawing;
 
 namespace AoC_2025_Day9;
 

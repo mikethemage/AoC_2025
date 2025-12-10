@@ -1,5 +1,4 @@
 ﻿using AoC.Utilities;
-using System.Reflection.PortableExecutable;
 
 namespace AoC_2025_Day10;
 
