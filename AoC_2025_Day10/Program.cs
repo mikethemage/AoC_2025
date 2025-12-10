@@ -1,4 +1,5 @@
 ﻿using AoC.Utilities;
+using System.Reflection.PortableExecutable;
 
 namespace AoC_2025_Day10;
 
@@ -75,38 +76,58 @@ internal class Program
         return -1;
     }
 
-    private static int GetMinimumButtonPressesForJoltages(Machine machine)
+    private static int GetMinimumButtonPressesForJoltages(Machine machine) 
     {
-        List<int> initialJoltageStatus = new List<int>();
-        foreach (int joltage in machine.JoltageRequirements)
-        {
-            initialJoltageStatus.Add(0);
-        }
-        JoltageState initialJoltageState = new JoltageState(initialJoltageStatus);
-        Queue<JoltageState> joltageStates = new Queue<JoltageState>();
-        joltageStates.Enqueue(initialJoltageState);
+        return Z3Minimizer.MinimizeTotalSum(machine.Buttons, machine.JoltageRequirements);
+    }
 
-        while (joltageStates.Count > 0)
+    //private static int GetMinimumButtonPressesForJoltages(Machine machine)
+    //{
+    //    List<int> initialJoltageStatus = new List<int>();
+    //    foreach (int joltage in machine.JoltageRequirements)
+    //    {
+    //        initialJoltageStatus.Add(0);
+    //    }
+    //    JoltageState initialJoltageState = new JoltageState(initialJoltageStatus);
+    //    PriorityQueue<JoltageState,int> joltageStates = new PriorityQueue<JoltageState, int>();
+    //    joltageStates.Enqueue(initialJoltageState, GetDistanceFromJoltage(initialJoltageStatus,machine.JoltageRequirements));
+    //    int bestButtonPushes = int.MaxValue;
+
+    //    while (joltageStates.Count > 0)
+    //    {
+    //        JoltageState currentState = joltageStates.Dequeue();
+    //        int goalReached = TargetJoltagesStatusReached(currentState.CurrentJoltageStatus, machine.JoltageRequirements);
+    //        if (goalReached == 0)
+    //        {
+    //            if(currentState.ButttonsPressed.Count<bestButtonPushes)
+    //            {
+    //                bestButtonPushes = currentState.ButttonsPressed.Count;
+    //            }
+    //        }
+    //        if (goalReached == -1)
+    //        {
+    //            for (int i = 0; i < machine.Buttons.Count; i++)
+    //            {
+    //                if (currentState.ButttonsPressed.Count < 1 || currentState.ButttonsPressed.Last() != i)
+    //                {
+    //                    JoltageState newState = machine.PressButtonJoltageMode(currentState, i);
+    //                    int distance = GetDistanceFromJoltage(newState.CurrentJoltageStatus, machine.JoltageRequirements);
+    //                    joltageStates.Enqueue(newState,distance);
+    //                }
+    //            }
+    //        }
+    //    }
+    //    return bestButtonPushes;
+    //}
+
+    private static int GetDistanceFromJoltage(List<int> currentJoltagesStatus, List<int> targetJoltagesStatus)
+    {
+        int distance = 0;
+        for (int i = 0; i < targetJoltagesStatus.Count; i++)
         {
-            JoltageState currentState = joltageStates.Dequeue();
-            int goalReached = TargetJoltagesStatusReached(currentState.CurrentJoltageStatus, machine.JoltageRequirements);
-            if (goalReached == 0)
-            {
-                return currentState.ButttonsPressed.Count;
-            }
-            if (goalReached == 1)
-            {
-                continue;
-            }
-            for (int i = 0; i < machine.Buttons.Count; i++)
-            {
-                if (currentState.ButttonsPressed.Count < 1 || currentState.ButttonsPressed.Last() != i)
-                {
-                    joltageStates.Enqueue(machine.PressButtonJoltageMode(currentState, i));
-                }
-            }
+            distance += targetJoltagesStatus[i] - currentJoltagesStatus[i];
         }
-        return -1;
+        return distance;
     }
 
     private static bool TargetLightsStatusReached(List<bool> currentLightStatus, List<bool> targetLightStatus)
@@ -176,64 +197,5 @@ internal class Program
 
         Machine output = new Machine { Buttons = buttons, JoltageRequirements = joltages, TargetLightStatus = targetLightStates };
         return output;
-    }
-}
-
-internal class Machine
-{
-    public required List<bool> TargetLightStatus { get; init; }
-    public required List<List<int>> Buttons { get; init; }
-    public required List<int> JoltageRequirements { get; init; }
-    public LightState PressButtonLightsMode(LightState currentLightState, int button)
-    {
-        return currentLightState.PressButton(button, Buttons[button]);
-    }
-    public JoltageState PressButtonJoltageMode(JoltageState currentJoltageState, int button)
-    {
-        return currentJoltageState.PressButton(button, Buttons[button]);
-    }
-}
-
-internal class LightState
-{
-    public List<int> ButttonsPressed { get; private set; } = new List<int>();
-    public List<bool> CurrentLightStatus { get; private set; }
-    public LightState(List<bool> initialLightStatus)
-    {
-        CurrentLightStatus = new List<bool>(initialLightStatus);
-    }
-    public LightState PressButton(int buttonId, List<int> toggleLights)
-    {
-        List<bool> nextLightStatus = new List<bool>(CurrentLightStatus);
-        foreach (int toggleLight in toggleLights)
-        {
-            nextLightStatus[toggleLight] = !nextLightStatus[toggleLight];
-        }
-        LightState nextLightState = new LightState(nextLightStatus);
-        nextLightState.ButttonsPressed.AddRange(ButttonsPressed);
-        nextLightState.ButttonsPressed.Add(buttonId);
-        return nextLightState;
-    }
-}
-
-internal class JoltageState
-{
-    public List<int> ButttonsPressed { get; private set; } = new List<int>();
-    public List<int> CurrentJoltageStatus { get; private set; }
-    public JoltageState(List<int> initialJoltageStatus)
-    {
-        CurrentJoltageStatus = new List<int>(initialJoltageStatus);
-    }
-    public JoltageState PressButton(int buttonId, List<int> increaseJoltages)
-    {
-        List<int> nextJoltageStatus = new List<int>(CurrentJoltageStatus);
-        foreach (int increaseJoltage in increaseJoltages)
-        {
-            nextJoltageStatus[increaseJoltage] = CurrentJoltageStatus[increaseJoltage] + 1;
-        }
-        JoltageState nextJoltageState = new JoltageState(nextJoltageStatus);
-        nextJoltageState.ButttonsPressed.AddRange(ButttonsPressed);
-        nextJoltageState.ButttonsPressed.Add(buttonId);
-        return nextJoltageState;
     }
 }
