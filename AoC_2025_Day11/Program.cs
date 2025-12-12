@@ -51,18 +51,18 @@ internal class Program
         }
         else
         {
-            Dictionary<(string currentNode, bool visitedDac, bool visitedFft), int> memory = new Dictionary<(string currentNode, bool visitedDac, bool visitedFft), int>();
+            Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long> memory = new Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long>();
             memory.Add(("svr", false, false), 1);
-            Stack<PathInfo> paths = new Stack<PathInfo>();
-            paths.Push(new PathInfo { CurrentNode = "svr", VisitedDac = false, VisitedFft = false });
+            Queue<PathInfo> paths = new Queue<PathInfo>();
+            paths.Enqueue(new PathInfo { CurrentNode = "svr", VisitedDac = false, VisitedFft = false });
             while (paths.Count>0)
             {
-                PathInfo currentDevice = paths.Pop();
+                PathInfo currentDevice = paths.Dequeue();
 
                 if (devices.ContainsKey(currentDevice.CurrentNode))
                 {
                     List<string> nextDevices = devices[currentDevice.CurrentNode];
-                    foreach (var nextDevice in nextDevices.Select(x=>new PathInfo { CurrentNode=x, VisitedDac=currentDevice.VisitedDac, VisitedFft=currentDevice.VisitedFft}).ToList())
+                    foreach (PathInfo nextDevice in nextDevices.Select(x=>new PathInfo { CurrentNode=x, VisitedDac=currentDevice.VisitedDac, VisitedFft=currentDevice.VisitedFft}).ToList())
                     {
                         if (nextDevice.CurrentNode == "dac")
                         {
@@ -79,7 +79,7 @@ internal class Program
                         else
                         {
                             memory.Add((nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft), memory[(currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)]);
-                            paths.Push(nextDevice);
+                            paths.Enqueue(nextDevice);
                         }
                     }
                 }                
