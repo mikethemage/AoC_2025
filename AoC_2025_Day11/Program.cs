@@ -51,41 +51,71 @@ internal class Program
         }
         else
         {
-            Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long> memory = new Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long>();
-            memory.Add(("svr", false, false), 1);
-            Queue<PathInfo> paths = new Queue<PathInfo>();
-            paths.Enqueue(new PathInfo { CurrentNode = "svr", VisitedDac = false, VisitedFft = false });
-            while (paths.Count>0)
-            {
-                PathInfo currentDevice = paths.Dequeue();
+            var memo = new Dictionary<(string, bool, bool), long>();
+            long paths = CountPathsMemo("svr", false, false, devices, memo);
 
-                if (devices.ContainsKey(currentDevice.CurrentNode))
-                {
-                    List<string> nextDevices = devices[currentDevice.CurrentNode];
-                    foreach (PathInfo nextDevice in nextDevices.Select(x=>new PathInfo { CurrentNode=x, VisitedDac=currentDevice.VisitedDac, VisitedFft=currentDevice.VisitedFft}).ToList())
-                    {
-                        if (nextDevice.CurrentNode == "dac")
-                        {
-                            nextDevice.VisitedDac = true;
-                        }
-                        if (nextDevice.CurrentNode == "fft")
-                        {
-                            nextDevice.VisitedFft = true;
-                        }
-                        if (memory.ContainsKey((nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft)))
-                        {
-                            memory[(nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft)] += memory[(currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)];
-                        }
-                        else
-                        {
-                            memory.Add((nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft), memory[(currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)]);
-                            paths.Enqueue(nextDevice);
-                        }
-                    }
-                }                
-            }
+            Console.WriteLine(paths);
 
-            Console.WriteLine(memory[("out", true, true)]);           
+            //Dictionary<(string currentNode, bool visitedDac, bool visitedFft), MemoryTracker> memory = new Dictionary<(string currentNode, bool visitedDac, bool visitedFft), MemoryTracker>();
+            //memory.Add(("svr", false, false), new MemoryTracker { Id= ("svr", false, false), CurrentValue = 1});
+            //Queue<PathInfo> paths = new Queue<PathInfo>();
+            //paths.Enqueue(new PathInfo { CurrentNode = "svr", VisitedDac = false, VisitedFft = false });
+            //while (paths.Count>0)
+            //{
+            //    PathInfo currentDevice = paths.Dequeue();
+
+            //    if (devices.ContainsKey(currentDevice.CurrentNode))
+            //    {
+            //        List<string> nextDevices = devices[currentDevice.CurrentNode];
+            //        foreach (PathInfo nextDevice in nextDevices.Select(x=>new PathInfo { CurrentNode=x, VisitedDac=currentDevice.VisitedDac, VisitedFft=currentDevice.VisitedFft}).ToList())
+            //        {
+            //            if (nextDevice.CurrentNode == "dac")
+            //            {
+            //                nextDevice.VisitedDac = true;
+            //            }
+            //            if (nextDevice.CurrentNode == "fft")
+            //            {
+            //                nextDevice.VisitedFft = true;
+            //            }
+            //            if (memory.ContainsKey((nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft)))
+            //            {
+            //                MemoryTracker existingMemory = memory[(nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft)];
+            //                if(existingMemory.Unresolved.ContainsKey((currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)))
+            //                {
+            //                    existingMemory.Unresolved[(currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)]++;
+            //                }
+            //                else
+            //                {
+            //                    existingMemory.Unresolved.Add((currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft), 1);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                MemoryTracker newMemory = new MemoryTracker { Id= (nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft), CurrentValue = memory[(currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft)].CurrentValue };
+            //                newMemory.Unresolved.Add((currentDevice.CurrentNode, currentDevice.VisitedDac, currentDevice.VisitedFft), 1);
+            //                memory.Add((nextDevice.CurrentNode, nextDevice.VisitedDac, nextDevice.VisitedFft), newMemory);
+            //                paths.Enqueue(nextDevice);
+            //            }
+            //        }
+            //    }                
+            //}
+
+            //while(memory.Values.Any(x=>x.Unresolved.Count>0))
+            //{
+            //    List<MemoryTracker> flowCandidates = memory.Values.Where(x => x.Unresolved.Count == 0).ToList();
+            //    foreach (MemoryTracker flowCandidate in flowCandidates)
+            //    {
+            //        List<MemoryTracker> flowTos = memory.Values.Where(x => x.Unresolved.ContainsKey(flowCandidate.Id)).ToList();
+            //        foreach (MemoryTracker flowTo in flowTos)
+            //        {
+            //            long newValue = flowTo.Unresolved[flowCandidate.Id] * flowCandidate.CurrentValue;
+            //            flowTo.CurrentValue += newValue;
+            //            flowTo.Unresolved.Remove(flowCandidate.Id);
+            //        }
+            //    }
+            //}
+            //Console.WriteLine(memory[("out", true, true)].CurrentValue);
+
         }
     }
 
@@ -105,6 +135,41 @@ internal class Program
 
         return devices;
     }
+
+    static long CountPathsMemo(
+        string node,
+        bool visitedDac,
+        bool visitedFft,
+        Dictionary<string, List<string>> devices,
+        Dictionary<(string, bool, bool), long> memo)
+    {
+        var key = (node, visitedDac, visitedFft);
+        if (memo.TryGetValue(key, out long cached)) return cached;
+
+        // update visited flags for the current node
+        if (node == "dac") visitedDac = true;
+        if (node == "fft") visitedFft = true;
+
+        // base case: reached "out"
+        if (node == "out")
+        {
+            long result = (visitedDac && visitedFft) ? 1L : 0L;
+            memo[key] = result;
+            return result;
+        }
+
+        long total = 0L;
+        if (devices.TryGetValue(node, out List<string>? neighbors))
+        {
+            foreach (string nxt in neighbors)
+            {
+                total += CountPathsMemo(nxt, visitedDac, visitedFft, devices, memo);
+            }
+        }
+
+        memo[key] = total;
+        return total;
+    }
 }
 
 internal class PathInfo
@@ -115,3 +180,9 @@ internal class PathInfo
 
 }
 
+internal class MemoryTracker
+{
+    public required (string currentNode, bool visitedDac, bool visitedFft) Id { get; init; }
+    public Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long> Unresolved = new Dictionary<(string currentNode, bool visitedDac, bool visitedFft), long>();
+    public long CurrentValue { get; set; } = 0;
+}
